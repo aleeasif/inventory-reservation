@@ -78,19 +78,6 @@ export class ReservationNotActiveError extends DomainError {
   }
 }
 
-export class ReservationLimitExceededError extends DomainError {
-  readonly code = 'RESERVATION_LIMIT_EXCEEDED';
-  readonly httpStatus = 429;
-  readonly classification = 'permanent';
-
-  constructor(productId: string, limit: number) {
-    super(`You already hold the maximum of ${String(limit)} reservations for this item.`, {
-      productId,
-      limit,
-    });
-  }
-}
-
 /**
  * The actor is authenticated but does not own the resource they are acting on.
  *

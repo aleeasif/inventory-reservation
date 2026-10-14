@@ -9,20 +9,18 @@
   },
   "workspaces": [
     "packages/shared",
-    "packages/server",
-    "packages/web"
+    "packages/server"
   ],
   "scripts": {
-    "build": "npm run build -w @inventory/shared && npm run build -w @inventory/server && npm run build -w @inventory/web",
-    "dev": "npm run build -w @inventory/shared && concurrently -n server,web -c cyan,magenta \"npm:dev:server\" \"npm:dev:web\"",
+    "build": "npm run build -w @inventory/shared && npm run build -w @inventory/server",
+    "dev": "npm run build -w @inventory/shared && npm run dev:server",
     "dev:server": "npm run dev -w @inventory/server",
     "dev:server:demo": "RATE_LIMIT_MAX=100000 RATE_LIMIT_WRITE_MAX=100000 npm run dev -w @inventory/server",
-    "dev:web": "npm run dev -w @inventory/web",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:load": "node packages/server/scripts/flash-sale-load-test.mjs",
-    "typecheck": "tsc --build --force && npm run typecheck -w @inventory/server && npm run typecheck -w @inventory/web",
+    "typecheck": "tsc --build --force && npm run typecheck -w @inventory/server",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -33,7 +31,6 @@
     "@eslint/js": "^9.37.0",
     "@types/node": "^22.18.8",
     "@vitest/coverage-v8": "^3.2.4",
-    "concurrently": "^9.2.1",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.4.0",

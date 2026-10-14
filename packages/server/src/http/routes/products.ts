@@ -6,8 +6,8 @@ import { asyncHandler } from '../asyncHandler.js';
 import { readParam } from '../middleware/validate.js';
 
 /**
- * Catalogue reads. Public, like any storefront, but still rate limited: the
- * availability counter is the thing a scraper would hammer during a drop.
+ * Catalogue reads. Public, but still rate limited: the availability counter
+ * is the thing a scraper would hammer during a drop.
  */
 export const createProductRoutes = (service: ReservationService): Router => {
   const router = Router();

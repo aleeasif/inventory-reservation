@@ -19,7 +19,6 @@ export default tseslint.config(
           './tsconfig.eslint.json',
           './packages/shared/tsconfig.json',
           './packages/server/tsconfig.test.json',
-          './packages/web/tsconfig.app.json',
         ],
         tsconfigRootDir: import.meta.dirname,
       },
@@ -41,11 +40,6 @@ export default tseslint.config(
       'max-depth': ['error', 3],
       'max-params': ['error', 4],
     },
-  },
-
-  {
-    files: ['**/*.tsx', 'packages/web/**/*.ts'],
-    languageOptions: { globals: { ...globals.browser } },
   },
 
   {

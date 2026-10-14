@@ -55,7 +55,7 @@ const stampede = async (harness: Harness, count: number): Promise<Outcome> => {
   const attempts = Array.from({ length: count }, (_unused, index) =>
     harness.service.reserve({
       productId: PRODUCT,
-      // A distinct buyer per request, so the per-user cap plays no part.
+      // A distinct buyer per request.
       userId: toUserId(`buyer-${String(index)}`),
       quantity: 1,
     }),

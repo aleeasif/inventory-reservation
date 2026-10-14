@@ -4,7 +4,6 @@ import {
   ForbiddenError,
   InsufficientStockError,
   InvariantViolationError,
-  ReservationLimitExceededError,
   ReservationNotActiveError,
   ReservationNotFoundError,
 } from '../../src/domain/errors.js';
@@ -99,22 +98,6 @@ describe('Inventory — reserving', () => {
     expect(reservation.status).toBe('ACTIVE');
   });
 
-  it('caps how many simultaneous holds one user may stack on one product', () => {
-    let inventory = inventoryWith(10);
-    for (const id of ['a', 'b', 'c']) {
-      inventory = reserveOne(inventory, { id }).inventory;
-    }
-    expect(() => reserveOne(inventory, { id: 'd' })).toThrow(ReservationLimitExceededError);
-  });
-
-  it('counts that cap per user, not globally', () => {
-    let inventory = inventoryWith(10);
-    for (const id of ['a', 'b', 'c']) {
-      inventory = reserveOne(inventory, { id }).inventory;
-    }
-    expect(() => reserveOne(inventory, { id: 'd', userId: BOB })).not.toThrow();
-  });
-
   it('refuses a quantity the boundary should already have rejected', () => {
     expect(() => reserveOne(inventoryWith(100), { quantity: 0 })).toThrow(InvariantViolationError);
     expect(() => reserveOne(inventoryWith(100), { quantity: 1.5 })).toThrow(
@@ -153,16 +136,6 @@ describe('Inventory — expiry', () => {
         now: at(RESERVATION_HOLD_MS + 1),
       }),
     ).toThrow(ReservationNotActiveError);
-  });
-
-  it('stops a lapsed hold counting against the user cap', () => {
-    let inventory = inventoryWith(10);
-    for (const id of ['a', 'b', 'c']) {
-      inventory = reserveOne(inventory, { id }).inventory;
-    }
-    expect(() =>
-      reserveOne(inventory, { id: 'd', now: at(RESERVATION_HOLD_MS + 1) }),
-    ).not.toThrow();
   });
 });
 

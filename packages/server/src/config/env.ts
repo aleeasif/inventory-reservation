@@ -28,8 +28,12 @@ const envSchema = z.object({
   SESSION_SECRET: z.string().min(SESSION_SECRET_MIN_BYTES).optional(),
   SESSION_TTL_MS: durationMs(24 * 60 * 60 * 1000),
 
-  /** Comma-separated exact origins allowed to call the API from a browser. */
-  CORS_ALLOWED_ORIGINS: z.string().default('http://localhost:5173'),
+  /**
+   * Comma-separated exact origins allowed to call the API from a browser.
+   * Empty by default: the challenge has no browser client. curl and the tests
+   * send no Origin header, so they are unaffected.
+   */
+  CORS_ALLOWED_ORIGINS: z.string().default(''),
 
   RESERVATION_HOLD_MS: durationMs(RESERVATION_HOLD_MS),
   RESERVATION_RETENTION_MS: durationMs(60 * 60 * 1000),

@@ -28,8 +28,7 @@ That guarantee — and the evidence for it — is what this repository is.
 
 ## What it does
 
-The challenge defines three levels. All three are implemented, plus a React storefront that
-makes the behaviour visible.
+The challenge defines three levels. All three are implemented.
 
 | Level | Requirement                                                                   | Where it lives                                                                                                                                       |
 | ----- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -58,14 +57,13 @@ Requires **Node 20.11+** (`.nvmrc` pins 22).
 nvm use && npm install && npm run build
 ```
 
-Run the API and the storefront together:
+Run the API:
 
 ```bash
 npm run dev
 ```
 
 - API — [http://localhost:4000/api/v1/health](http://localhost:4000/api/v1/health)
-- Storefront — [http://localhost:5173](http://localhost:5173)
 
 Run the full verification gate (format, lint, types, tests):
 
@@ -75,11 +73,10 @@ npm run verify
 
 ### See the flash sale for yourself
 
-The storefront has a **Concurrency lab**: pick a product, pick 500 simultaneous buyers, press
-run. Each simulated buyer opens its own signed session, so nothing but the server's locking
-decides the winner.
+Five hundred buyers, each with their own signed session, against one unit. Nothing but the
+lock decides the winner.
 
-Large simulations need the rate limiter out of the way, so start the API in demo mode:
+The rate limiter would stop 500 sessions from one address, so start the API in demo mode:
 
 ```bash
 npm run dev:server:demo
@@ -201,14 +198,13 @@ is late, paused or dead, the system is still correct.
 
 ```
 packages/
-├── shared/      Wire contracts (zod schemas + inferred types) used by both sides
-├── server/
-│   ├── domain/           Pure business rules. No I/O, no framework, no clock of its own.
-│   ├── application/      Use-case orchestration + the ports it needs from the world.
-│   ├── infrastructure/   Lock, repository, clock, ids, tokens, logging.
-│   ├── http/             Express: parse, authenticate, delegate, respond.
-│   └── config/           Environment validated once, at startup.
-└── web/         React storefront + concurrency lab
+├── shared/      Wire contracts (zod schemas + inferred types)
+└── server/
+    ├── domain/           Pure business rules. No I/O, no framework, no clock of its own.
+    ├── application/      Use-case orchestration + the ports it needs from the world.
+    ├── infrastructure/   Lock, repository, clock, ids, tokens, logging.
+    ├── http/             Express: parse, authenticate, delegate, respond.
+    └── config/           Environment validated once, at startup.
 ```
 
 Dependencies point inward. `domain/` imports nothing but `domain/` and the shared contract;
@@ -247,16 +243,15 @@ Every failure is deliberately classified as **transient** (retry is sensible) or
 **permanent** (retrying is harmful noise), carries its own HTTP mapping, and carries
 structured context for the logs:
 
-| Error                           | Status | Code                         | Class             |
-| ------------------------------- | ------ | ---------------------------- | ----------------- |
-| `InsufficientStockError`        | 409    | `INSUFFICIENT_STOCK`         | permanent         |
-| `ReservationNotActiveError`     | 409    | `RESERVATION_NOT_ACTIVE`     | permanent         |
-| `IdempotencyKeyConflictError`   | 409    | `IDEMPOTENCY_KEY_CONFLICT`   | permanent         |
-| `ReservationLimitExceededError` | 429    | `RESERVATION_LIMIT_EXCEEDED` | permanent         |
-| `LockTimeoutError`              | 503    | `SERVICE_BUSY`               | **transient**     |
-| `ProductNotFoundError`          | 404    | `PRODUCT_NOT_FOUND`          | permanent         |
-| `UnauthenticatedError`          | 401    | `UNAUTHENTICATED`            | permanent         |
-| `InvariantViolationError`       | 500    | `INTERNAL_ERROR`             | permanent (a bug) |
+| Error                         | Status | Code                       | Class             |
+| ----------------------------- | ------ | -------------------------- | ----------------- |
+| `InsufficientStockError`      | 409    | `INSUFFICIENT_STOCK`       | permanent         |
+| `ReservationNotActiveError`   | 409    | `RESERVATION_NOT_ACTIVE`   | permanent         |
+| `IdempotencyKeyConflictError` | 409    | `IDEMPOTENCY_KEY_CONFLICT` | permanent         |
+| `LockTimeoutError`            | 503    | `SERVICE_BUSY`             | **transient**     |
+| `ProductNotFoundError`        | 404    | `PRODUCT_NOT_FOUND`        | permanent         |
+| `UnauthenticatedError`        | 401    | `UNAUTHENTICATED`          | permanent         |
+| `InvariantViolationError`     | 500    | `INTERNAL_ERROR`           | permanent (a bug) |
 
 Nothing is ever swallowed: every error passes through one handler
 ([errorHandler.ts](packages/server/src/http/middleware/errorHandler.ts)) that logs it with
@@ -397,8 +392,8 @@ not serialised behind each other.
 
 [tests/concurrency/flash-sale-http.test.ts](packages/server/tests/concurrency/flash-sale-http.test.ts)
 drives 500 requests through the **entire HTTP stack** — middleware, auth, routes, service,
-lock, repository — each with its own signed session, so neither the per-user hold cap nor the
-per-user rate budget can be mistaken for the thing preventing the oversell.
+lock, repository — each with its own signed session, so the per-user write budget
+cannot be mistaken for the thing preventing the oversell.
 
 It also proves the sale re-opens correctly: advance the clock past the hold window, fire
 another 500, and exactly one new buyer wins.
@@ -419,10 +414,9 @@ No test sleeps. No test depends on another test's state.
 
 ### 4. Unit tests for the rules
 
-[tests/unit/inventory.test.ts](packages/server/tests/unit/inventory.test.ts) — 32 tests
-covering the availability formula, rejection rather than clamping, the per-user hold cap,
-idempotent confirm and cancel, "a confirmed purchase is never reversed", lapsed holds, and
-compaction.
+[tests/unit/inventory.test.ts](packages/server/tests/unit/inventory.test.ts) — 29 tests
+covering the availability formula, rejection rather than clamping, idempotent confirm
+and cancel, "a confirmed purchase is never reversed", lapsed holds, and compaction.
 
 [tests/unit/keyedMutex.test.ts](packages/server/tests/unit/keyedMutex.test.ts) — mutual
 exclusion, FIFO fairness, per-key independence, release on throw, acquire timeout, and that
@@ -434,15 +428,10 @@ start production without a secret.
 
 ### 5. HTTP contract tests
 
-[tests/integration/api.test.ts](packages/server/tests/integration/api.test.ts) — 37 tests
+[tests/integration/api.test.ts](packages/server/tests/integration/api.test.ts) — 36 tests
 against the real app via supertest. For each endpoint: happy path, validation failure, auth
 failure, domain failure. Plus hygiene: no stack traces, no `x-powered-by`, hardening headers
 present, untrusted CORS origins not reflected, client-supplied request ids ignored.
-
-### 6. Frontend
-
-[packages/web/tests](packages/web/tests) — the client's contract parsing and error mapping,
-and App-level tests that render the real component tree against a fake network.
 
 ### How to review this yourself
 
@@ -453,16 +442,27 @@ and App-level tests that render the real component tree against a fake network.
 | Expiry logic                              | `npx vitest run --project server tests/unit/inventory.test.ts -t expiry`                |
 | The API surface                           | `npx vitest run --project server tests/integration`                                     |
 | Real sockets, real process                | `npm run dev:server:demo` then `npm run test:load`                                      |
-| By hand                                   | Open the storefront, run the concurrency lab at 500 buyers                              |
+| By hand                                   | Two sessions against `flash-sale-single`, below                                         |
 
 ### Testing it by hand
 
-Two documents, depending on how much time you have:
+`npm run dev`, then the Level 1 example. Stock is 1. User A wins. User B is refused.
 
-| Document                                             | What it is                                                                                                                                                                                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [docs/manual-test-plan.md](docs/manual-test-plan.md) | The formal plan: 67 numbered cases across nine suites, each with preconditions, exact commands and an unambiguous expected result, plus a result sheet and sign-off criteria. ~45 minutes for a full pass, ~10 for a smoke pass. |
-| [docs/manual-testing.md](docs/manual-testing.md)     | The same ground as a narrative tour, if you just want to drive it and look around.                                                                                                                                               |
+```bash
+API=http://localhost:4000/api/v1
+A=$(curl -s -X POST "$API/sessions" | jq -r .token)
+curl -s -X POST "$API/reservations" \
+  -H "Authorization: Bearer $A" -H 'Content-Type: application/json' \
+  -d '{"productId":"flash-sale-single","quantity":1}'
+
+B=$(curl -s -X POST "$API/sessions" | jq -r .token)
+curl -s -o /dev/null -w '%{http_code}\n' -X POST "$API/reservations" \
+  -H "Authorization: Bearer $B" -H 'Content-Type: application/json' \
+  -d '{"productId":"flash-sale-single","quantity":1}'
+```
+
+The first call is `201`. The second is `409` with `INSUFFICIENT_STOCK`. Stop the API and start
+it again to put the seed catalogue back. Stock lives in memory.
 
 ---
 
@@ -534,13 +534,6 @@ and covered by a test.
 - **Configuration is validated once at startup** and never read from `process.env` again. A
   malformed value is a startup failure, not a surprise under load.
 
-### In the browser
-
-- **The bearer token lives in React state only** — not `localStorage`, not a cookie. It dies
-  with the tab. Anything persisted is reachable by any script that manages to run on the page.
-- **Responses are parsed through the published schemas**, so a malformed or hostile response
-  cannot flow unchecked into the UI.
-
 ### Known limits
 
 Stated plainly, because a security section that claims completeness is not credible:
@@ -563,25 +556,25 @@ production.
 `npm run dev` keeps stock in memory, which is what Level 1 of the challenge specifies. A
 restart puts the seed catalogue back.
 
-| Variable                   | Default                 | Purpose                                          |
-| -------------------------- | ----------------------- | ------------------------------------------------ |
-| `NODE_ENV`                 | `development`           | `production` enables strict secret checks        |
-| `PORT`                     | `4000`                  | HTTP port                                        |
-| `LOG_LEVEL`                | `info`                  | pino level                                       |
-| `SESSION_SECRET`           | random (dev)            | HMAC key. **Required in production**, ≥32 chars  |
-| `SESSION_TTL_MS`           | `86400000`              | Session lifetime                                 |
-| `CORS_ALLOWED_ORIGINS`     | `http://localhost:5173` | Comma-separated exact origins                    |
-| `RESERVATION_HOLD_MS`      | `120000`                | How long a hold lasts                            |
-| `RESERVATION_RETENTION_MS` | `3600000`               | How long terminal reservations stay queryable    |
-| `SWEEP_INTERVAL_MS`        | `5000`                  | Expiry sweeper cadence                           |
-| `LOCK_ACQUIRE_TIMEOUT_MS`  | `5000`                  | Before a waiter gives up with `503 SERVICE_BUSY` |
-| `IDEMPOTENCY_TTL_MS`       | `600000`                | How long a key is remembered                     |
-| `IDEMPOTENCY_MAX_ENTRIES`  | `50000`                 | Hard cap on remembered keys                      |
-| `RATE_LIMIT_WINDOW_MS`     | `60000`                 | Rate limit window                                |
-| `RATE_LIMIT_MAX`           | `300`                   | Reads per window                                 |
-| `RATE_LIMIT_WRITE_MAX`     | `60`                    | Writes per window                                |
-| `BODY_LIMIT`               | `4kb`                   | Maximum request body                             |
-| `TRUST_PROXY`              | `false`                 | Enable only behind a trusted proxy               |
+| Variable                   | Default       | Purpose                                            |
+| -------------------------- | ------------- | -------------------------------------------------- |
+| `NODE_ENV`                 | `development` | `production` enables strict secret checks          |
+| `PORT`                     | `4000`        | HTTP port                                          |
+| `LOG_LEVEL`                | `info`        | pino level                                         |
+| `SESSION_SECRET`           | random (dev)  | HMAC key. **Required in production**, ≥32 chars    |
+| `SESSION_TTL_MS`           | `86400000`    | Session lifetime                                   |
+| `CORS_ALLOWED_ORIGINS`     | unset         | Comma-separated browser origins. Empty allows none |
+| `RESERVATION_HOLD_MS`      | `120000`      | How long a hold lasts                              |
+| `RESERVATION_RETENTION_MS` | `3600000`     | How long terminal reservations stay queryable      |
+| `SWEEP_INTERVAL_MS`        | `5000`        | Expiry sweeper cadence                             |
+| `LOCK_ACQUIRE_TIMEOUT_MS`  | `5000`        | Before a waiter gives up with `503 SERVICE_BUSY`   |
+| `IDEMPOTENCY_TTL_MS`       | `600000`      | How long a key is remembered                       |
+| `IDEMPOTENCY_MAX_ENTRIES`  | `50000`       | Hard cap on remembered keys                        |
+| `RATE_LIMIT_WINDOW_MS`     | `60000`       | Rate limit window                                  |
+| `RATE_LIMIT_MAX`           | `300`         | Reads per window                                   |
+| `RATE_LIMIT_WRITE_MAX`     | `60`          | Writes per window                                  |
+| `BODY_LIMIT`               | `4kb`         | Maximum request body                               |
+| `TRUST_PROXY`              | `false`       | Enable only behind a trusted proxy                 |
 
 ---
 
@@ -605,13 +598,6 @@ The record should say what actually happened.
 **The in-memory repository is deliberately async.** A synchronous fake would hide the very bug
 this system exists to prevent — incorrect code would pass its tests.
 
-**There is a per-user cap of 3 active holds per product.** Without it, one script could hold
-an entire drop hostage for two minutes at a time without buying anything.
-
-**The frontend polls rather than caching optimistically.** During a flash sale the number on
-screen is stale the moment it is drawn; showing a stock count the server would not honour is
-worse than showing it a second late.
-
 ---
 
 ## What production would add
@@ -634,7 +620,7 @@ Roughly in priority order:
 
 | Command                     | What it does                                        |
 | --------------------------- | --------------------------------------------------- |
-| `npm run dev`               | API + storefront together                           |
+| `npm run dev`               | API on port 4000                                    |
 | `npm run dev:server:demo`   | API with rate limits relaxed, for large simulations |
 | `npm run build`             | Build all packages                                  |
 | `npm test`                  | All tests                                           |
@@ -649,8 +635,8 @@ Roughly in priority order:
 
 ## AI disclosure
 
-I used Claude and Cursor as assistants. The design, the implementation, the automated
-tests, and the manual documents in `docs/` are mine. I ran the suites and the hand plan.
+I used Claude and Cursor as assistants. The design, the implementation, and the
+automated tests are mine. I ran the suites.
 
 Claude helped me plan the application structure, and look for standard considerations
 the brief does not spell out but that keep the system consistent over time: where the
@@ -662,6 +648,5 @@ Cursor helped me with:
 
 - Checking the running server stays on the in-memory catalogue the challenge specifies
 - Drafting and editing this README, including this disclosure
-- Wording in the manual test plan when the store description changed
 
 I decided what stayed.

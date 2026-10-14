@@ -100,7 +100,7 @@ describe('Configuration', () => {
       TRUST_PROXY: false,
       BODY_LIMIT: '4kb',
     });
-    expect(config.corsOrigins).toEqual(['http://localhost:5173']);
+    expect(config.corsOrigins).toEqual([]);
     expect(config.RESERVATION_HOLD_MS).toBe(120_000);
   });
 

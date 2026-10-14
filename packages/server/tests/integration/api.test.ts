@@ -200,16 +200,6 @@ describe('POST /reservations — business rules', () => {
     expect(response.status).toBe(409);
     expect(response.body.error.message).toMatch(/sold out/iu);
   });
-
-  it('caps how many holds one buyer may stack on one product', async () => {
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      expect((await reserve(TEN)).status).toBe(201);
-    }
-
-    const response = await reserve(TEN);
-    expect(response.status).toBe(429);
-    expect(response.body.error).toMatchObject({ code: 'RESERVATION_LIMIT_EXCEEDED' });
-  });
 });
 
 describe('Reservation lifecycle over HTTP', () => {
@@ -408,11 +398,14 @@ describe('Error and response hygiene', () => {
   });
 
   it('allows the configured origin', async () => {
-    const response = await request(container.app)
+    const allowed = createTestContainer({
+      env: { CORS_ALLOWED_ORIGINS: 'https://shop.example' },
+    });
+    const response = await request(allowed.app)
       .get(`${API_BASE_PATH}/health`)
-      .set('Origin', 'http://localhost:5173');
+      .set('Origin', 'https://shop.example');
 
-    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:5173');
+    expect(response.headers['access-control-allow-origin']).toBe('https://shop.example');
   });
 });
 

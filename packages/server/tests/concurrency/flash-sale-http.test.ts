@@ -17,8 +17,8 @@ interface Tally {
  * guarantee is proved end to end and not just in the layer that is easy to test.
  */
 const stampede = async (container: TestContainer, productId: string): Promise<Tally> => {
-  // A distinct signed session per buyer: the per-user cap and the per-user write
-  // budget must play no part in the result.
+  // A distinct signed session per buyer, so the per-user write budget
+  // plays no part in the result.
   const buyers = Array.from(
     { length: SIMULTANEOUS_BUYERS },
     () => `Bearer ${container.tokens.issue().token}`,

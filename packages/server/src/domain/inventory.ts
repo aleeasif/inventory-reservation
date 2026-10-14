@@ -1,12 +1,8 @@
-import {
-  MAX_ACTIVE_RESERVATIONS_PER_USER_PER_PRODUCT,
-  MAX_RESERVATION_QUANTITY,
-} from '@inventory/shared';
+import { MAX_RESERVATION_QUANTITY } from '@inventory/shared';
 import {
   ForbiddenError,
   InsufficientStockError,
   InvariantViolationError,
-  ReservationLimitExceededError,
   ReservationNotActiveError,
   ReservationNotFoundError,
 } from './errors.js';
@@ -169,16 +165,6 @@ export class Inventory {
     const available = this.availableStock(command.now);
     if (command.quantity > available) {
       throw new InsufficientStockError(this.state.productId, command.quantity, available);
-    }
-
-    const heldByUser = this.reservationsOf(command.userId).filter((reservation) =>
-      isHoldingStock(reservation, command.now),
-    ).length;
-    if (heldByUser >= MAX_ACTIVE_RESERVATIONS_PER_USER_PER_PRODUCT) {
-      throw new ReservationLimitExceededError(
-        this.state.productId,
-        MAX_ACTIVE_RESERVATIONS_PER_USER_PER_PRODUCT,
-      );
     }
 
     const reservation: Reservation = {

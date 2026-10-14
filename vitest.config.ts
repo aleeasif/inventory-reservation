@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    projects: ['packages/server', 'packages/web'],
+    projects: ['packages/server'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -10,8 +10,8 @@ export default defineConfig({
       // here would report a misleading 0% for code the server exercises on
       // every request. Process entry points are excluded for the same reason:
       // they are wiring, verified by running the thing, not by unit tests.
-      include: ['packages/server/src/**/*.ts', 'packages/web/src/**/*.{ts,tsx}'],
-      exclude: ['packages/server/src/index.ts', 'packages/web/src/main.tsx'],
+      include: ['packages/server/src/**/*.ts'],
+      exclude: ['packages/server/src/index.ts'],
       thresholds: {
         statements: 85,
         branches: 85,
