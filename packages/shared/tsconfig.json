@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    // Co-located with the output on purpose: `tsc --build` skips a rebuild
+    // whenever this file says the project is current, so leaving it outside
+    // `dist` means `rm -rf dist` silently produces a build that never runs.
+    "tsBuildInfoFile": "./dist/.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"]
+}
