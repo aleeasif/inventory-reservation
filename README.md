@@ -355,7 +355,7 @@ npm run test:coverage    # with coverage thresholds (85%)
 npm run test:load        # 500 real HTTP requests at a running server
 ```
 
-**132 tests.** The suite is organised by what it is trying to prove, not by file layout.
+**115 tests.** The suite is organised by what it is trying to prove, not by file layout.
 
 ### 1. The race condition — proved, not assumed
 
@@ -503,7 +503,7 @@ and covered by a test.
   state-changing calls. Keyed by authenticated user where one exists, falling back to IP — so
   one attacker behind many addresses still gets one budget, and many genuine buyers behind one
   corporate NAT are not punished for each other.
-- `**trust proxy` is off by default.** Trusting `X-Forwarded-For` unconditionally lets any
+- **`trust proxy` is off by default.** Trusting `X-Forwarded-For` unconditionally lets any
   client spoof its IP straight past the limiter.
 - **Bounded memory everywhere**: the idempotency store has a TTL _and_ a hard entry cap with
   oldest-first eviction; the sweeper forgets terminal reservations; the lock table forgets
@@ -515,7 +515,7 @@ and covered by a test.
 
 - **No stack traces, driver messages or internal text ever reach a client.** Unrecognised
   errors become a flat 500 with a correlation id; the detail goes to the logs.
-- `**helmet` security headers**, and `x-powered-by` disabled — free reconnaissance denied.
+- **`helmet` security headers**, and `x-powered-by` disabled — free reconnaissance denied.
 - **CORS is an explicit origin allowlist.** Reflecting whatever `Origin` arrives would make
   the API callable from any site a user happens to visit. Credentials are off: identity
   travels in the `Authorization` header, so no cookies are needed and CSRF has no surface.
@@ -583,7 +583,7 @@ restart puts the seed catalogue back.
 **Reservations reject rather than clamp.** Asking for 3 when 2 remain fails. Quietly
 reserving 2 is a different purchase from the one the user asked for.
 
-`**available` is derived, never stored.** It is computed from its three parts on every read,
+**`available` is derived, never stored.** It is computed from its three parts on every read,
 so it cannot drift from them. The cost is an O(reservations) walk per product; the benefit is
 that one entire class of bug — a cached counter disagreeing with reality — cannot occur.
 
